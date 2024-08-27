@@ -1,0 +1,146 @@
+- name: Set facts and update /etc/containers/registry.conf
+  include_tasks: containers-registry-config.yaml
+
+- name: Ensure docker directory exists
+  become: yes
+  file:
+    state: directory
+    path: /etc/docker
+    mode: 0755
+
+
+# Update daemon config
+- name: Check if docker daemon configuration exists
+  stat:
+    path: /etc/docker/daemon.json
+  register: docker_config_stat
+- name: Load docker daemon configuration
+  when: docker_config_stat.stat.exists
+  slurp:
+    path: /etc/docker/daemon.json
+  register: docker_config
+- name: Parse docker daemon configuration
+  when: docker_config_stat.stat.exists
+  set_fact:
+    docker_config: "{{ docker_config.content | b64decode | from_json }}"
+- name: Set default docker daemon configuration
+  when: not docker_config_stat.stat.exists
+  set_fact:
+    docker_config:
+      registry-mirrors: []
+- name: Add registry to docker daemon configuration
+  vars:
+    new_config:
+      registry-mirrors: "['https://{{ buildset_registry_alias }}:{{ buildset_registry.port }}/']"
+  set_fact:
+    docker_config: "{{ docker_config | combine(new_config) }}"
+- name: Save docker daemon configuration
+  copy:
+    content: "{{ docker_config | to_nice_json }}"
+    dest: /etc/docker/daemon.json
+    mode: 0644
+  become: true
+
+- name: Populate service facts
+  service_facts:
+
+# This is a copy of the logic from the ensure-docker handlers
+- name: Restart docker if it exists
+  block:
+    - name: Stop docker.socket to avoid any conflict
+      become: true
+      service:
+        name: docker.socket
+        enabled: yes
+        state: stopped
+      failed_when: false
+
+    - name: Assure docker service is running
+      become: true
+      service:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Assure docker.socket service is running
+      become: true
+      service:
+        name: docker.socket
+        enabled: yes
+        state: started
+      failed_when: false
+  when:
+    # docker-ce may have been uninstalled by cri-o
+    - "'docker.service' in ansible_facts.services"
+    - ansible_facts.services['docker.service']['status'] != 'not-found'
+
+- name: Ensure buildkit directory exists
+  become: yes
+  file:
+    state: directory
+    path: /etc/buildkit/
+    mode: 0755
+- name: Modify buildkitd.toml
+  become: yes
+  modify_buildkitd_toml:
+    path: /etc/buildkit/buildkitd.toml
+    buildset_registry: "{{ buildset_registry }}"
+    buildset_registry_alias: "{{ buildset_registry_alias }}"
+    namespaces: "{{ buildset_registry_namespaces }}"
+  no_log: true
+
+# We use 'block' here to cause the become to apply to all the tasks
+# (which does not automatically happen with include_tasks).
+- name: Update docker user config to use buildset registry
+  become: true
+  become_user: "{{ buildset_registry_docker_user }}"
+  when: buildset_registry_docker_user is defined
+  block:
+    - name: Include user config
+      include_tasks: user-config.yaml
+- name: Update docker user config to use buildset registry
+  when: buildset_registry_docker_user is not defined
+  block:
+    - name: Include user config
+      include_tasks: user-config.yaml
+
+- name: Check if cri-o is installed
+  stat:
+    path: /etc/crio/crio.conf
+  register: crio_path
+# TODO: with cri-o >= 1.16, change this to a SIGHUP of the crio process
+- name: Restart cri-o
+  when: crio_path.stat.exists
+  service:
+    name: crio
+    state: restarted
+  become: true
+
+# microk8s (containerd) setup
+- name: Check for microk8s
+  stat:
+    path: '/var/snap/microk8s'
+  register: _microk8s
+- name: Setup microk8s mirrors
+  when: _microk8s.stat.exists
+  become: yes
+  block:
+    - name: Setup mirrors
+      include_tasks: microk8s-mirror.yaml
+      loop: '{{ buildset_registry_namespaces }}'
+      loop_control:
+        loop_var: zj_uk8s_mirror
+
+    # NOTE(ianw) 2022-12-13 : I don't think this is strictly necessary
+    # when updating mirror configs.  It also shouldn't hurt, so leave
+    # it for now.
+    - name: Restart microk8s
+      command: snap restart microk8s
+
+- name: Wait for kubernetes connection to come back
+  command: timeout 10s kubectl get pods
+  when: kubelet_config.stat.exists or crio_path.stat.exists or _microk8s.stat.exists
+  register: _api_ready
+  until: _api_ready.rc == 0
+  retries: 6
+  delay: 10

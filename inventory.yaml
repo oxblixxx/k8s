@@ -1,0 +1,56 @@
+---
+all:
+  vars:
+    ansible_port: 22
+    ansible_user: azureuser
+    ansible_ssh_private_key_file: /home/azureuser/.ssh/ansible
+    ansible_ssh_extra_args: -o StrictHostKeyChecking=no
+    # The user and group that will be used to run Kubectl and Helm commands.
+    kubectl:
+      user: azureuser
+      group: azureuser
+    # The user and group that will be used to run Docker commands.
+    docker_users:
+      - azureuser
+    # The MetalLB controller will be installed on the Kubernetes cluster.
+    metallb_setup: true
+    # Loopback devices will be created on all cluster nodes which then can be used
+    # to deploy a Ceph cluster which requires block devices to be provided.
+    # Please use loopback devices only for testing purposes. They are not suitable
+    # for production due to performance reasons.
+    loopback_setup: true
+    loopback_device: /dev/loop100
+    loopback_image: /var/lib/openstack-helm/ceph-loop.img
+    loopback_image_size: 12G
+  children:
+    # The primary node where Kubectl and Helm will be installed. If it is
+    # the only node then it must be a member of the groups k8s_cluster and
+    # k8s_control_plane. If there are more nodes then the wireguard tunnel
+    # will be established between the primary node and the k8s_control_plane node.
+    primary:
+      hosts:
+        primary:
+          ansible_host: 4.206.195.125
+    # The nodes where the Kubernetes components will be installed.
+    k8s_cluster:
+      hosts:
+        node-1:
+          ansible_host: 4.206.195.125
+        node-2:
+          ansible_host: 4.206.194.26
+        node-3:
+          ansible_host: 4.206.209.38
+    # The control plane node where the Kubernetes control plane components will be installed.
+    # It must be the only node in the group k8s_control_plane.
+    k8s_control_plane:
+      hosts:
+        node-1:
+          ansible_host: 4.206.195.125
+    # These are Kubernetes worker nodes. There could be zero such nodes.
+    # In this case the Openstack workloads will be deployed on the control plane node.
+    k8s_nodes:
+      hosts:
+        node-2:
+          ansible_host: 4.206.194.26
+        node-3:
+          ansible_host: 4.206.209.38
