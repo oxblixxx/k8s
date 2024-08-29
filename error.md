@@ -30,6 +30,7 @@ Using Kubernetes version: v1.30.4", "[preflight] Running pre-flight checks"]}
 Well, to fix this issue goes various ways, 
 
 ```sh
+sudo rm -f /etc/kubernetes/manifests/*.yaml
 sudo umount /var/lib/etcd
 sudo kubeadm reset -f
 sudo rm -rf /etc/kubernetes/ /var/lib/etcd /var/lib/kubelet /var/lib/dockershim
