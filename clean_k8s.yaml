@@ -1,0 +1,34 @@
+# Just incase there is a need to automate the cleanin up of the resource on the cluster
+---
+- name: Reset Kubernetes nodes
+  hosts: all
+  become: yes
+  tasks:
+
+    - name: Remove Kubernetes manifest files
+      ansible.builtin.file:
+        path: /etc/kubernetes/manifests/
+        state: absent
+        recurse: yes
+
+    - name: Unmount /var/lib/etcd
+      ansible.builtin.command:
+        cmd: umount /var/lib/etcd
+      ignore_errors: yes
+
+    - name: Reset kubeadm
+      ansible.builtin.command:
+        cmd: kubeadm reset -f
+
+    - name: Remove Kubernetes directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+        recurse: yes
+      loop:
+        - /etc/kubernetes/
+        - /var/lib/etcd
+        - /var/lib/kubelet
+        - /var/lib/dockershim
+        - /var/lib/cni/
+        - /etc/cni/
