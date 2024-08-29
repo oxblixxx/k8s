@@ -37,4 +37,5 @@ sudo rm -rf /etc/kubernetes/ /var/lib/etcd /var/lib/kubelet /var/lib/dockershim
 sudo rm -rf /var/lib/cni/ /etc/cni/
 ```
 
+Here is an ansible play for it [ansible-play](https://github.com/oxblixxx/k8s/blob/master/clean_k8s.yaml)
 Then run the playbook again. NB, this will be wiping the etcd, Condsidering there is no data on the etcd, it was prompted to be wiped. Further research will be done on how to avoid clearing the etcd
