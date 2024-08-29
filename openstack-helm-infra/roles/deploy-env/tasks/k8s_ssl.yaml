@@ -1,0 +1,20 @@
+- name: Create directory on the server
+  file:
+    path: 
+      - /etc/etcd
+      - /var/lib/etcd
+    state: directory
+    mode: '0700'
+
+- name: Copy ca-csr.json to the server
+  copy:
+    src: files//ca-csr.json
+    dest: /etc/etcd/ca-csr.json
+    mode: '0700'
+
+- name: Run CFSSL gencert command
+  command: >
+     cfssl gencert -initca /etc/etcd/ca-csr.json |
+     cfssljson -bare /etc/etcd/ca-csr.json
+  args:
+    chdir: /etc/etcd/

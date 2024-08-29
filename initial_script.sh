@@ -4,7 +4,8 @@ GO_VERSION="1.23.0"
 GO_TAR="go$GO_VERSION.linux-amd64.tar.gz"
 DOWNLOAD_URL="https://go.dev/dl/$GO_TAR"
 INSTALL_DIR="/usr/local"
-
+EMAIL="phamust1111@gmail.com"
+USER="oxblixxx"
 # Download Go
 echo "Downloading Go $GO_VERSION..."
 wget $DOWNLOAD_URL -O $GO_TAR

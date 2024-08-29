@@ -8,7 +8,7 @@
     - name: Remove Kubernetes manifest files
       ansible.builtin.file:
         path: /etc/kubernetes/manifests/
-        state: absent
+        state: directory
         recurse: yes
 
     - name: Unmount /var/lib/etcd
@@ -23,7 +23,7 @@
     - name: Remove Kubernetes directories
       ansible.builtin.file:
         path: "{{ item }}"
-        state: absent
+        state: directory
         recurse: yes
       loop:
         - /etc/kubernetes/

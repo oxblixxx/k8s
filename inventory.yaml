@@ -30,27 +30,29 @@ all:
     primary:
       hosts:
         primary:
-          ansible_host: 4.204.24.31
+          ansible_host: 4.204.24.39
     # The nodes where the Kubernetes components will be installed.
     k8s_cluster:
       hosts:
         node-1:
-          ansible_host: 4.204.24.31
+          ansible_host: 4.204.24.39
         node-2:
-          ansible_host: 4.204.24.129
+          ansible_host: 4.204.24.0
         node-3:
-          ansible_host: 4.204.24.134
+          ansible_host: 4.204.24.123
     # The control plane node where the Kubernetes control plane components will be installed.
     # It must be the only node in the group k8s_control_plane.
     k8s_control_plane:
       hosts:
         node-1:
-          ansible_host: 4.204.24.31
+          ansible_host: 4.204.24.39
+#        node-2:
+#          ansible_host: 4.204.24.0
     # These are Kubernetes worker nodes. There could be zero such nodes.
     # In this case the Openstack workloads will be deployed on the control plane node.
     k8s_nodes:
       hosts:
         node-2:
-          ansible_host: 4.204.24.129
+          ansible_host: 4.204.24.0
         node-3:
-          ansible_host: 4.204.24.134
+          ansible_host: 4.204.24.123

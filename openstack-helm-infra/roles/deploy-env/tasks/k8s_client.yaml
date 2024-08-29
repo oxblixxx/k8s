@@ -57,10 +57,10 @@
       args:
         executable: /bin/bash
 
-#    - name: Install osh helm plugin
-#      become_user: "{{ kubectl.user }}"
-#      shell: |
-#        helm plugin install {{ osh_plugin_repo }}
+    - name: Install osh helm plugin
+      become_user: "{{ kubectl.user }}"
+      shell: |
+        helm plugin install {{ osh_plugin_repo }}
 
     # This is to improve build time
     - name: Remove stable Helm repo
