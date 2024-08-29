@@ -15,7 +15,11 @@
   apt:
     state: present
     update_cache: true
-    allow_downgrade: true
+# fatal: [primary]: FAILED! => {"changed": false, "msg": "Unsupported parameters for (apt) module: allow_downgrade Supported parameters
+# include: allow_unauthenticated, autoclean, autoremove, cache_valid_time, deb, default_release, dpkg_options, 
+#force, force_apt_get, install_recommends, only_upgrade, package, policy_rc_d, purge, state, update_cache, update_cache_retries, update_cache_retry_max_delay, upgrade"}
+#    allow_downgrade: true
+    force_apt_get: true
     pkg:
       - "kubectl={{ kube_version }}"
 
@@ -53,10 +57,10 @@
       args:
         executable: /bin/bash
 
-    - name: Install osh helm plugin
-      become_user: "{{ kubectl.user }}"
-      shell: |
-        helm plugin install {{ osh_plugin_repo }}
+#    - name: Install osh helm plugin
+#      become_user: "{{ kubectl.user }}"
+#      shell: |
+#        helm plugin install {{ osh_plugin_repo }}
 
     # This is to improve build time
     - name: Remove stable Helm repo

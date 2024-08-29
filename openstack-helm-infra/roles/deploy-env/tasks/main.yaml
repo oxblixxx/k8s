@@ -11,23 +11,23 @@
 # limitations under the License.
 
 ---
-- name: Include prerequisites tasks
-  include_tasks:
-    file: prerequisites.yaml
+#- name: Include prerequisites tasks
+#  include_tasks:
+#    file: prerequisites.yaml
 
-- name: Configure /etc/hosts
-  template:
-    src: files/hosts
-    dest: /etc/hosts
+#- name: Configure /etc/hosts
+#  template:
+#    src: files/hosts
+#    dest: /etc/hosts
 
-- name: Loop devices
-  include_tasks:
-    file: loopback_devices.yaml
-  when: loopback_setup and inventory_hostname in (groups['k8s_cluster'] | default([]))
+#- name: Loop devices
+#  include_tasks:
+#    file: loopback_devices.yaml
+#  when: loopback_setup and inventory_hostname in (groups['k8s_cluster'] | default([]))
 
-- name: Deploy Containerd
-  include_tasks:
-    file: containerd.yaml
+#- name: Deploy Containerd
+#  include_tasks:
+#    file: containerd.yaml
 
 - name: Include K8s common tasks
   include_tasks:
@@ -43,10 +43,10 @@
   command: "{{ (groups['k8s_control_plane'] | map('extract', hostvars, ['join_command', 'stdout_lines', 0]))[0] }}"
   when: inventory_hostname in (groups['k8s_nodes'] | default([]))
 
-- name: Include K8s client tasks
-  include_tasks:
-    file: k8s_client.yaml
-  when: inventory_hostname in (groups['primary'] | default([]))
+#- name: Include K8s client tasks
+#  include_tasks:
+#    file: k8s_client.yaml
+#  when: inventory_hostname in (groups['primary'] | default([]))
 
 - name: Include Calico tasks
   include_tasks:
