@@ -1,4 +1,3 @@
-
 #!/bin/bash
 # Set variables
 GO_VERSION="1.23.0"
@@ -29,19 +28,31 @@ echo "export PATH=\$PATH:$INSTALL_DIR/go/bin" >> ~/.bashrc
 # Source the profile to apply changes immediately
 source $HOME/.profile
 
-# Install cfssl and cfssljson using Go
-echo "Installing cfssl and cfssljson..."
-go install github.com/cloudflare/cfssl/cmd/cfssl@latest
-go install github.com/cloudflare/cfssl/cmd/cfssljson@latest
+#!/bin/bash
 
-# Verify Go installation
-echo "Verifying Go installation..."
-go version
+# Download the cfssl and cfssljson binaries
+echo "Downloading cfssl and cfssljson..."
+wget -q --show-progress --https-only --timestamping \
+https://github.com/cloudflare/cfssl/releases/download/v1.6.1/cfssl_1.6.1_linux_amd64 \
+https://github.com/cloudflare/cfssl/releases/download/v1.6.1/cfssljson_1.6.1_linux_amd64
 
-# Verify cfssl and cfssljson installation
-echo "Verifying cfssl and cfssljson installation..."
+# Make the downloaded files executable
+echo "Setting executable permissions for cfssl and cfssljson..."
+chmod +x cfssl_1.6.1_linux_amd64 cfssljson_1.6.1_linux_amd64
+
+# Move the binaries to /usr/local/bin
+echo "Moving cfssl and cfssljson to /usr/local/bin..."
+sudo mv cfssl_1.6.1_linux_amd64 /usr/local/bin/cfssl
+sudo mv cfssljson_1.6.1_linux_amd64 /usr/local/bin/cfssljson
+
+# Verify installation
+echo "Verifying cfssl installation..."
 cfssl version
+
+echo "Verifying cfssljson installation..."
 cfssljson --version
+
+echo "Installation complete."
 
 
 sudo apt update -y && sudo apt upgrade -y
